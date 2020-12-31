@@ -37,13 +37,13 @@ We need to set Rust to use the nightly toolchain for this project. change direct
 
 `rustup override set nightly`
 
-Copy the contents of the `cargo.toml` file. This would setup the project with the necessary dependencies. The file has been setup specifically for Arduino Uno and is using the latest commit of the git project avr-hal at the time of writing this.
+Copy the contents of the `cargo.toml` [file](https://github.com/arvizard1/rust-arduino-dht11/commit/65cc2a869f3c005e69522636f4e954e8f6af3ae5#diff-2e9d962a08321605940b5a657135052fbcef87b5e360662bb527c96d9a615542). This would setup the project with the necessary dependencies. The file has been setup specifically for Arduino Uno and is using the latest commit of the git project avr-hal at the time of writing this.
 
-There is also `.cargo/config.toml` file that needs to be copied. This helps in reducing the legnth of the line of `cargo build` by storing some of the build settings here. One of the settinngs is the target.
+There is also `.cargo/config.toml` [file](https://github.com/arvizard1/rust-arduino-dht11/commit/65cc2a869f3c005e69522636f4e954e8f6af3ae5#diff-9a4f3e4537ebb7474452d131b0d969d89a51286f4269aac5ef268e712be17268) that needs to be copied. This helps in reducing the length of the line of `cargo build` by storing some of the build settings. One of the settinngs is the target.
 
-The Rust nightly compiler includes a built-in target for ATmega328 named avr-unknown-gnu-atmega328. However, using that to build caused complie issues. I then used the json file from [here](https://github.com/Rahix/avr-hal/blob/master/avr-specs/avr-atmega32u4.json) which worked.
+The Rust nightly compiler includes a built-in target for ATmega328 named avr-unknown-gnu-atmega328. However, using that to build caused compile issues. I then used the json file from [here](https://github.com/Rahix/avr-hal/blob/master/avr-specs/avr-atmega328p.json) which worked.
 
-Setup a basic file for the project. I used the [blink](https://github.com/Rahix/avr-hal/blob/master/boards/arduino-uno/examples/uno-blink.rs) example.
+Setup a basic file for the project. I used the [blink](https://github.com/Rahix/avr-hal/blob/master/boards/arduino-uno/examples/uno-blink.rs) example. Copy this file over to the contents of main.rs in the src folder.
 
 ### Build Project
 
