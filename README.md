@@ -1,3 +1,6 @@
+# Read Temperature and Humidity
+This project is about using Rust to program an Arduino to read temperature and humidity data from a DHT11.
+
 ## Installation
 
 We need to setup a few things to use Rust with AVR support. This was taken directly from the [AVR-Rust](https://book.avr-rust.com/002-installing-the-compiler.html) book.
@@ -22,8 +25,9 @@ $ git clone https://github.com/avr-rust/blink.git
 $ cd blink
 $ rustup override set nightly
 ```
+To create the project manually,here is a guide.
 
-To create a project manually, here is a guide to set it up initially with a simple blink script.
+We need to choose an IO library to communicate using the Arduino. For this project, I chose an AVR implementation of the [embedded hal](https://github.com/rust-embedded/embedded-hal) called [avr hal](https://github.com/Rahix/avr-hal). The project being setup follows [avr hal](https://github.com/Rahix/avr-hal) with some modifications to make it work with an Arduino Uno.
 
 Create a rust project using cargo.
 
@@ -32,11 +36,6 @@ Create a rust project using cargo.
 We need to set Rust to use the nightly toolchain for this project. change directory into the project folder `rustTemperature` and then type
 
 `rustup override set nightly`
-
-
-`git clone https://github.com/avr-rust/blink.git`
-
-We also need to choose an IO library to communicate using the Arduino. For this project, I chose and AVR implementation of the [embedded hal](https://github.com/rust-embedded/embedded-hal) called [avr hal](https://github.com/Rahix/avr-hal) 
 
 Copy the contents of the `cargo.toml` file. This would setup the project with the necessary dependencies. The file has been setup specifically for Arduino Uno and is using the latest commit of the git project avr-hal at the time of writing this.
 
