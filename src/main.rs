@@ -6,12 +6,12 @@ use arduino_uno::hal::port::portd::PD5;
 use arduino_uno::hal::port::mode::TriState;
 
 use panic_halt as _;
+
 const TIMEOUT: u32 = 200;
-
-
 struct Dht<'a> {
     pin: &'a mut PD5<TriState>
 }
+
 
 impl<'a>  Dht<'a> {
     fn get_readings(&mut self) -> (u8,u8) {
@@ -86,7 +86,6 @@ impl<'a>  Dht<'a> {
     }
 
     fn initialize_dht(&mut self) -> bool {
-        arduino_uno::delay_ms(500);
         self.pin.set_low().void_unwrap();
         arduino_uno::delay_ms(20);
         self.pin.set_high().void_unwrap();
@@ -122,9 +121,11 @@ fn main() -> ! {
         let mut temp_humidity = Dht {
             pin: &mut dht
         };
-        let (h,t) = temp_humidity.get_readings();
-        ufmt::uwriteln!(&mut serial, "{} {}!\r", h,t).void_unwrap();
-        arduino_uno::delay_ms(1000);
+        match temp_humidity.get_readings() {
+            (u8::MAX, u8::MAX) => continue,
+            (h, t) => ufmt::uwriteln!(&mut serial, "{} {}!\r", h,t).void_unwrap(),
+        }
+        //arduino_uno::delay_ms(1000);
      
 
     }
