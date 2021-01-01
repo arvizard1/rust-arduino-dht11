@@ -2,8 +2,146 @@
 #![no_main]
 
 use arduino_uno::prelude::*;
+use arduino_uno::hal::port::portd::PD5;
+use arduino_uno::hal::port::mode::TriState;
 
 use panic_halt as _;
+const TIMEOUT: u32 = 200;
+
+
+struct Dht<'a> {
+    pin: &'a mut PD5<TriState>
+}
+
+impl<'a>  Dht<'a> {
+    fn get_readings(&mut self) -> (u8,u8) {
+        let mut lows = [0;41];
+        let mut highs = [0;41];
+        let mut humidity:u8 = u8::MAX;
+        let mut humidity_decimal:u8 = u8::MAX;
+        let mut temperature:u8 = u8::MAX;
+        let mut temperature_decimal:u8 = u8::MAX;
+
+        if !self.initialize_dht() {
+            return (humidity,temperature);
+        }
+        
+        for n in 1..41 {
+            lows[n] = self.expect_pulse(false);
+            highs[n] = self.expect_pulse(true);
+        }
+        let mut o: u8 =0;
+        //ufmt::uwriteln!(&mut serial, "{} {}\r",lows[0], highs[0]).void_unwrap();
+        for n in 1..41 {
+            if highs[n] < lows[n] {
+                o = o << 1;
+            }
+            else {
+                o= (o << 1) | 1;
+            }    
+            if n%8 ==0 {
+                //ufmt::uwriteln!(&mut serial, "{}\r",o).void_unwrap();
+               
+                if n/8 == 1 {
+                     humidity = o;
+                }
+                if n/8 == 2 {
+                    humidity_decimal= o;
+               }
+                if n/8 == 3 {
+                     temperature = o;
+                }
+                if n/8 == 4 {
+                    temperature_decimal = o;
+               }
+               if n/8 == 5 {
+                if (humidity + humidity_decimal + temperature + temperature_decimal) == o  {
+                    return (humidity, temperature);
+                }
+                }
+                
+                o=0;
+            }
+
+    }
+    return (u8::MAX, u8::MAX);
+    }
+    fn expect_pulse(&mut self, level: bool) -> u32 {
+        const TIMEOUT: u32 = 200;
+        let mut counter: u32 = 0;
+        if level {
+            while self.pin.is_high().void_unwrap() {
+                counter = counter +1;
+                if counter > TIMEOUT {
+                    return TIMEOUT;
+                }
+            }
+        }
+        else {
+            while self.pin.is_low().void_unwrap() {
+                counter = counter +1;
+                if counter > TIMEOUT {
+                    return TIMEOUT;
+                }
+            }
+        }
+        counter
+    }
+
+    fn initialize_dht(&mut self) -> bool {
+        arduino_uno::delay_ms(500);
+        self.pin.set_low().void_unwrap();
+        arduino_uno::delay_ms(20);
+        self.pin.set_high().void_unwrap();
+        arduino_uno::delay_us(40);
+    
+        let low =self.expect_pulse(false);
+        let high = self.expect_pulse(true);
+        if low !=TIMEOUT && high !=TIMEOUT {
+
+            return true;
+        }
+        return false;
+    }
+}
+
+fn initialize_dht(dht :&mut PD5<TriState>) -> bool {
+    arduino_uno::delay_ms(500);
+    dht.set_low().void_unwrap();
+    arduino_uno::delay_ms(20);
+    dht.set_high().void_unwrap();
+    arduino_uno::delay_us(40);
+
+    let low =expect_pulse(false, dht);
+    let high = expect_pulse(true, dht);
+    if low !=TIMEOUT && high !=TIMEOUT {
+        return true;
+    }
+    return false;
+}
+
+
+
+fn expect_pulse(level: bool, dht :&mut PD5<TriState>) ->  u32 {
+    let mut counter: u32 = 0;
+    if level {
+        while dht.is_high().void_unwrap() {
+            counter = counter +1;
+            if counter > TIMEOUT {
+                return TIMEOUT;
+            }
+        }
+    }
+    else {
+        while dht.is_low().void_unwrap() {
+            counter = counter +1;
+            if counter > TIMEOUT {
+                return TIMEOUT;
+            }
+        }
+    }
+    counter
+}
 
 
 #[arduino_uno::entry]
@@ -18,51 +156,35 @@ fn main() -> ! {
         9600.into_baudrate(),
     );
     ufmt::uwriteln!(&mut serial, "Hello from Rusty Arduino!\r").void_unwrap();
-
     let mut dht = pins.d5.into_tri_state(&mut pins.ddr);
 
 
     loop {
         nb::block!(serial.read()).void_unwrap();
         ufmt::uwriteln!(&mut serial, "Reading Temperature!\r").void_unwrap();
-
-
-        arduino_uno::delay_ms(500);
-        dht.set_low().void_unwrap();
-        arduino_uno::delay_ms(20);
-        dht.set_high().void_unwrap();
-        //arduino_uno::delay_us(40);
-    
-        let mut lows = [0;41];
         let mut highs = [0;41];
-        let mut print = 0;
+        let mut lows = [0;41];
 
-        for n in 0..41 {
-            let mut counter = 0;
-            while dht.is_low().void_unwrap() {
-                counter = counter +1;
-                if counter>100 {
-                    break;
-                }
-            }
-            lows[n] = counter;
-            let mut counter1 = 0;
-            while dht.is_high().void_unwrap() {
-                counter1 = counter1 +1;
-                if counter1>100 {
-                    break;
-                }
-            }
-            highs[n] = counter1;
+        let mut test = Dht {
+            pin: &mut dht
+        };
+        let (h,t) = test.get_readings();
+        ufmt::uwriteln!(&mut serial, "{} {}!\r", h,t).void_unwrap();
+        arduino_uno::delay_ms(1000);
+
+        if  !initialize_dht(&mut dht) {
+            ufmt::uwriteln!(&mut serial, "Failed!\r").void_unwrap();
+            continue;
         }
-      
-        // Read a byte from the serial connection
-        //let b = nb::block!(serial.read()).void_unwrap();
 
-        // Answer
-        //ufmt::uwriteln!(&mut serial, "Got !\r", ).void_unwrap();
+      
+            
+        for n in 1..41 {
+            lows[n] = expect_pulse(false, &mut dht);
+            highs[n] = expect_pulse(true, &mut dht);
+        }
         let mut o: u8 =0;
-        ufmt::uwriteln!(&mut serial, "{} {}\r",lows[0], highs[0]).void_unwrap();
+        //ufmt::uwriteln!(&mut serial, "{} {}\r",lows[0], highs[0]).void_unwrap();
         for n in 1..41 {
             
 
