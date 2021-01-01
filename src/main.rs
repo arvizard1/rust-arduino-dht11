@@ -14,7 +14,7 @@ struct Dht<'a> {
 
 
 impl<'a>  Dht<'a> {
-    fn get_readings(&mut self) -> (u8,u8) {
+    fn get_readings(&mut self) -> Result<(u8,u8), (u8)> {
         let mut lows = [0;41];
         let mut highs = [0;41];
         let mut humidity:u8 = u8::MAX;
@@ -23,7 +23,7 @@ impl<'a>  Dht<'a> {
         let mut temperature_decimal:u8 = u8::MAX;
 
         if !self.initialize_dht() {
-            return (humidity,temperature);
+            return Err(1);
         }
         
         for n in 1..41 {
@@ -53,7 +53,7 @@ impl<'a>  Dht<'a> {
                }
                if n/8 == 5 {
                 if (humidity + humidity_decimal + temperature + temperature_decimal) == o  {
-                    return (humidity, temperature);
+                    return Ok((humidity, temperature));
                 }
                 }
                 
@@ -61,7 +61,7 @@ impl<'a>  Dht<'a> {
             }
 
     }
-    return (u8::MAX, u8::MAX);
+    return Err(1);
     }
     fn expect_pulse(&mut self, level: bool) -> u32 {
         const TIMEOUT: u32 = 200;
@@ -122,10 +122,9 @@ fn main() -> ! {
             pin: &mut dht
         };
         match temp_humidity.get_readings() {
-            (u8::MAX, u8::MAX) => continue,
-            (h, t) => ufmt::uwriteln!(&mut serial, "{} {}!\r", h,t).void_unwrap(),
+            Ok((h, t)) => ufmt::uwriteln!(&mut serial, "{} {}!\r", h,t).void_unwrap(),
+            _ => continue,
         }
-        //arduino_uno::delay_ms(1000);
      
 
     }
