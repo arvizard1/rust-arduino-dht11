@@ -21,13 +21,13 @@ We need to setup a few things to use Rust with AVR support. This was taken direc
 
 To use the project as is, clone this project and set rust to use the nightly toolchain
 ```
-$ git clone https://github.com/avr-rust/blink.git
-$ cd blink
+$ git clone https://github.com/arvizard1/rust-arduino-dht11.git
+$ cd into the folder
 $ rustup override set nightly
 ```
 To create the project manually,here is a guide.
 
-We need to choose an IO library to communicate using the Arduino. For this project, I chose an AVR implementation of the [embedded hal](https://github.com/rust-embedded/embedded-hal) called [avr hal](https://github.com/Rahix/avr-hal). The project being setup follows [avr hal](https://github.com/Rahix/avr-hal) with some modifications to make it work with an Arduino Uno.
+We need to choose an IO library to communicate using the Arduino. For this project, I chose an AVR implementation of the [embedded hal](https://github.com/rust-embedded/embedded-hal) called [avr hal](https://github.com/Rahix/avr-hal). This project's template follows [avr hal](https://github.com/Rahix/avr-hal) with some modifications to make it work with an Arduino Uno. 
 
 Create a rust project using cargo.
 
@@ -37,13 +37,15 @@ We need to set Rust to use the nightly toolchain for this project. change direct
 
 `rustup override set nightly`
 
-Copy the contents of the `cargo.toml` [file](https://github.com/arvizard1/rust-arduino-dht11/commit/65cc2a869f3c005e69522636f4e954e8f6af3ae5#diff-2e9d962a08321605940b5a657135052fbcef87b5e360662bb527c96d9a615542). This would setup the project with the necessary dependencies. The file has been setup specifically for Arduino Uno.
+Copy the contents of the `cargo.toml` [file](https://github.com/arvizard1/rust-arduino-dht11/blob/main/Cargo.toml). This would setup the project with the necessary dependencies. The file has been setup specifically for Arduino Uno.
 
-There is also `.cargo/config.toml` [file](https://github.com/arvizard1/rust-arduino-dht11/commit/65cc2a869f3c005e69522636f4e954e8f6af3ae5#diff-9a4f3e4537ebb7474452d131b0d969d89a51286f4269aac5ef268e712be17268) that needs to be copied. This helps in reducing the length of `cargo build` by storing some of the build settings. One of the settings is the target.
+There is also `.cargo/config.toml` [file](https://github.com/arvizard1/rust-arduino-dht11/blob/main/.cargo/config.toml) that needs to be copied. This helps in reducing the length of `cargo build` by storing some of the build settings. One of the settings is the target.
 
 The Rust nightly compiler includes a built-in target for ATmega328 named avr-unknown-gnu-atmega328. However, using that to build caused compile issues. I then used the json file from [here](https://github.com/Rahix/avr-hal/blob/master/avr-specs/avr-atmega328p.json) which worked. Copy the json file to the root of the project folder.
 
-Setup a basic file for the project. I used the [blink](https://github.com/Rahix/avr-hal/blob/master/boards/arduino-uno/examples/uno-blink.rs) example. Copy this file over to the contents of main.rs in the src folder.
+Setup the [main.rs](https://github.com/arvizard1/rust-arduino-dht11/blob/main/src/main.rs)
+
+Before you build, note that this project was setup using the dht11 sensor in pin d5 and arduiono's serial baud to 9600. 
 
 ### Build Project
 

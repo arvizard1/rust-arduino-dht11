@@ -31,7 +31,6 @@ impl<'a>  Dht<'a> {
             highs[n] = self.expect_pulse(true);
         }
         let mut o: u8 =0;
-        //ufmt::uwriteln!(&mut serial, "{} {}\r",lows[0], highs[0]).void_unwrap();
         for n in 1..41 {
             if highs[n] < lows[n] {
                 o = o << 1;
@@ -39,9 +38,7 @@ impl<'a>  Dht<'a> {
             else {
                 o= (o << 1) | 1;
             }    
-            if n%8 ==0 {
-                //ufmt::uwriteln!(&mut serial, "{}\r",o).void_unwrap();
-               
+            if n%8 ==0 {               
                 if n/8 == 1 {
                      humidity = o;
                 }
@@ -105,45 +102,6 @@ impl<'a>  Dht<'a> {
     }
 }
 
-fn initialize_dht(dht :&mut PD5<TriState>) -> bool {
-    arduino_uno::delay_ms(500);
-    dht.set_low().void_unwrap();
-    arduino_uno::delay_ms(20);
-    dht.set_high().void_unwrap();
-    arduino_uno::delay_us(40);
-
-    let low =expect_pulse(false, dht);
-    let high = expect_pulse(true, dht);
-    if low !=TIMEOUT && high !=TIMEOUT {
-        return true;
-    }
-    return false;
-}
-
-
-
-fn expect_pulse(level: bool, dht :&mut PD5<TriState>) ->  u32 {
-    let mut counter: u32 = 0;
-    if level {
-        while dht.is_high().void_unwrap() {
-            counter = counter +1;
-            if counter > TIMEOUT {
-                return TIMEOUT;
-            }
-        }
-    }
-    else {
-        while dht.is_low().void_unwrap() {
-            counter = counter +1;
-            if counter > TIMEOUT {
-                return TIMEOUT;
-            }
-        }
-    }
-    counter
-}
-
-
 #[arduino_uno::entry]
 fn main() -> ! {
     let dp = arduino_uno::Peripherals::take().unwrap();
@@ -161,46 +119,13 @@ fn main() -> ! {
 
     loop {
         nb::block!(serial.read()).void_unwrap();
-        ufmt::uwriteln!(&mut serial, "Reading Temperature!\r").void_unwrap();
-        let mut highs = [0;41];
-        let mut lows = [0;41];
-
-        let mut test = Dht {
+        let mut temp_humidity = Dht {
             pin: &mut dht
         };
-        let (h,t) = test.get_readings();
+        let (h,t) = temp_humidity.get_readings();
         ufmt::uwriteln!(&mut serial, "{} {}!\r", h,t).void_unwrap();
         arduino_uno::delay_ms(1000);
-
-        if  !initialize_dht(&mut dht) {
-            ufmt::uwriteln!(&mut serial, "Failed!\r").void_unwrap();
-            continue;
-        }
-
-      
-            
-        for n in 1..41 {
-            lows[n] = expect_pulse(false, &mut dht);
-            highs[n] = expect_pulse(true, &mut dht);
-        }
-        let mut o: u8 =0;
-        //ufmt::uwriteln!(&mut serial, "{} {}\r",lows[0], highs[0]).void_unwrap();
-        for n in 1..41 {
-            
-
-            if highs[n] < lows[n] {
-                o = o << 1;
-            }
-            else {
-                o= (o << 1) | 1;
-            }    
-            if n%8 ==0 {
-                ufmt::uwriteln!(&mut serial, "{}\r",o).void_unwrap();
-
-                o=0;
-
-            }
-        }       
+     
 
     }
 }
